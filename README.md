@@ -8,7 +8,7 @@ Users can create a concept map.
 
 ## Getting started
 
-Download the [release file](https://github.com/fdagner/conceptmap_moodle-database-preset-/releases). 
+Download the [release file](https://github.com/fdagner/conceptmap_moodle-database-preset/releases). 
 Create a "Database" activity in Moodle and then upload the ZIP file.
 
 ## Language Support
