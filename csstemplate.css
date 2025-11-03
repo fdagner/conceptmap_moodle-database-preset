@@ -22,7 +22,7 @@
 }
 
 .conceptmap {
-width: 100%;
+width: 950px;
  overflow-x: auto;   /* sorgt für horizontales Scrollen */
   overflow-y: hidden; /* optional: keine vertikalen Scrollbalken */
   box-sizing: border-box;
@@ -184,4 +184,8 @@ overflow: auto;
 .connection-label {
   touch-action: manipulation;  /* Safari-spezifisch: Schnellere Touch-Response */
   -webkit-touch-callout: none;  /* Verhindert iOS-Kontext-Menü */
+}
+
+.action-menu {
+  background: #ced4da;
 }
