@@ -21,7 +21,6 @@
     </div>
   </div>
 </div>
-
 <div class="modal fade" id="conceptMapModal" tabindex="-1" aria-labelledby="conceptMapModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-scrollable modal-lg">
     <div class="modal-content">
@@ -64,14 +63,13 @@
     </div>
   </div>
 </div>
-
 <script>
   const canvas = document.querySelector('.conceptmap #canvas');
   const svg = document.querySelector('.conceptmap #svg');
   const jsonInput = document.querySelector('.conceptmap #[[code#id]]');
-let isSelecting = false;  // Flag, um Drags während Select zu blocken
+let isSelecting = false; // Flag, um Drags während Select zu blocken
 let selectTimeout = null; // Timeout für Click-Intent-Erkennung
-let dragThreshold = 10;   // Neu: Erhöhte Schwelle (von 5 auf 10px), ignoriert Zucken
+let dragThreshold = 10; // Neu: Erhöhte Schwelle (von 5 auf 10px), ignoriert Zucken
   let nodes = [];
   let connections = [];
   let connectStart = null;
@@ -85,7 +83,6 @@ let dragThreshold = 10;   // Neu: Erhöhte Schwelle (von 5 auf 10px), ignoriert 
   let nodeIdCounter = 1;
   let connectionIdCounter = 1;
   let lastTapTime = 0;
-
   // SVG Pfeilspitze definieren
   svg.innerHTML = `
     <defs>
@@ -94,14 +91,12 @@ let dragThreshold = 10;   // Neu: Erhöhte Schwelle (von 5 auf 10px), ignoriert 
       </marker>
     </defs>
   `;
-
   // Initialisierung: JSON aus Input laden
   window.addEventListener('load', () => {
     if (jsonInput.value.trim()) {
       loadFromJSON(jsonInput.value);
     }
   });
-
   // Funktion zum Berechnen des Randpunkts
   function getBorderPoint(lineStartX, lineStartY, lineEndX, lineEndY, rect, canvasRect) {
     const dx = lineEndX - lineStartX;
@@ -111,7 +106,6 @@ let dragThreshold = 10;   // Neu: Erhöhte Schwelle (von 5 auf 10px), ignoriert 
     const right = left + rect.width;
     const bottom = top + rect.height;
     const intersections = [];
-
     if (dx !== 0) {
       const t = (left - lineStartX) / dx;
       if (t > 0 && t <= 1) {
@@ -119,7 +113,6 @@ let dragThreshold = 10;   // Neu: Erhöhte Schwelle (von 5 auf 10px), ignoriert 
         if (y >= top && y <= bottom) intersections.push({x: left, y, t});
       }
     }
-
     if (dx !== 0) {
       const t = (right - lineStartX) / dx;
       if (t > 0 && t <= 1) {
@@ -127,7 +120,6 @@ let dragThreshold = 10;   // Neu: Erhöhte Schwelle (von 5 auf 10px), ignoriert 
         if (y >= top && y <= bottom) intersections.push({x: right, y, t});
       }
     }
-
     if (dy !== 0) {
       const t = (top - lineStartY) / dy;
       if (t > 0 && t <= 1) {
@@ -135,7 +127,6 @@ let dragThreshold = 10;   // Neu: Erhöhte Schwelle (von 5 auf 10px), ignoriert 
         if (x >= left && x <= right) intersections.push({x, y: top, t});
       }
     }
-
     if (dy !== 0) {
       const t = (bottom - lineStartY) / dy;
       if (t > 0 && t <= 1) {
@@ -143,16 +134,13 @@ let dragThreshold = 10;   // Neu: Erhöhte Schwelle (von 5 auf 10px), ignoriert 
         if (x >= left && x <= right) intersections.push({x, y: bottom, t});
       }
     }
-
     if (intersections.length > 0) {
       intersections.sort((a, b) => a.t - b.t);
       return intersections[0];
     }
     return {x: lineEndX, y: lineEndY};
   }
-
   let mode = 'default';
-
   // Hilfsfunktion für Double-Tap-Erkennung
   function isDoubleTap() {
     const currentTime = Date.now();
@@ -160,7 +148,6 @@ let dragThreshold = 10;   // Neu: Erhöhte Schwelle (von 5 auf 10px), ignoriert 
     lastTapTime = currentTime;
     return tapLength < 500 && tapLength > 0;
   }
-
   // Touch drag handler factory
   function createTouchDragHandler(isNode = true) {
     return function touchMoveHandler(e) {
@@ -168,7 +155,7 @@ let dragThreshold = 10;   // Neu: Erhöhte Schwelle (von 5 auf 10px), ignoriert 
       if (isNode && draggedNode) {
         const deltaX = Math.abs(touch.clientX - dragStartPos.x);
         const deltaY = Math.abs(touch.clientY - dragStartPos.y);
-        
+       
         if (deltaX > 5 || deltaY > 5) {
           e.preventDefault();
           hasMoved = true;
@@ -176,10 +163,8 @@ let dragThreshold = 10;   // Neu: Erhöhte Schwelle (von 5 auf 10px), ignoriert 
           const nodeRect = draggedNode.element.getBoundingClientRect();
           let newX = touch.clientX - canvasRect.left - (nodeRect.width / 2);
           let newY = touch.clientY - canvasRect.top - (nodeRect.height / 2);
-
           newX = Math.max(0, Math.min(newX, canvasRect.width - nodeRect.width));
           newY = Math.max(0, Math.min(newY, canvasRect.height - nodeRect.height));
-
           draggedNode.x = newX;
           draggedNode.y = newY;
           draggedNode.element.style.left = newX + 'px';
@@ -192,17 +177,15 @@ let dragThreshold = 10;   // Neu: Erhöhte Schwelle (von 5 auf 10px), ignoriert 
       } else if (draggedControl) {
         const deltaX = Math.abs(touch.clientX - dragStartPos.x);
         const deltaY = Math.abs(touch.clientY - dragStartPos.y);
-        
+       
         if (deltaX > 5 || deltaY > 5) {
           e.preventDefault();
           draggedControl.isDragging = true;
           const canvasRect = canvas.getBoundingClientRect();
           let newX = touch.clientX - canvasRect.left;
           let newY = touch.clientY - canvasRect.top;
-
           newX = Math.max(0, Math.min(newX, canvasRect.width));
           newY = Math.max(0, Math.min(newY, canvasRect.height));
-
           const fromNode = nodes.find(n => n.id === draggedControl.from);
           const toNode = nodes.find(n => n.id === draggedControl.to);
           if (fromNode && toNode) {
@@ -212,15 +195,13 @@ let dragThreshold = 10;   // Neu: Erhöhte Schwelle (von 5 auf 10px), ignoriert 
             const y1 = fromRect.top + fromRect.height / 2 - canvasRect.top;
             const x2 = toRect.left + toRect.width / 2 - canvasRect.left;
             const y2 = toRect.top + toRect.height / 2 - canvasRect.top;
-            
+           
             let startPoint = getBorderPoint(x1, y1, x2, y2, fromRect, canvasRect) || {x: x1, y: y1};
             let endPoint = getBorderPoint(x2, y2, x1, y1, toRect, canvasRect) || {x: x2, y: y2};
-
             const t = 0.5;
             draggedControl.controlX = (newX - (1 - t) ** 2 * startPoint.x - t ** 2 * endPoint.x) / (2 * (1 - t) * t);
             draggedControl.controlY = (newY - (1 - t) ** 2 * startPoint.y - t ** 2 * endPoint.y) / (2 * (1 - t) * t);
           }
-
           dragStartPos.x = touch.clientX;
           dragStartPos.y = touch.clientY;
           renderConnections();
@@ -229,7 +210,7 @@ let dragThreshold = 10;   // Neu: Erhöhte Schwelle (von 5 auf 10px), ignoriert 
       } else if (potentialDraggedControl) {
         const deltaX = Math.abs(touch.clientX - dragStartPos.x);
         const deltaY = Math.abs(touch.clientY - dragStartPos.y);
-        
+       
         if (deltaX > 5 || deltaY > 5) {
           e.preventDefault();
           hasMoved = true;
@@ -239,10 +220,8 @@ let dragThreshold = 10;   // Neu: Erhöhte Schwelle (von 5 auf 10px), ignoriert 
           const canvasRect = canvas.getBoundingClientRect();
           let newX = touch.clientX - canvasRect.left;
           let newY = touch.clientY - canvasRect.top;
-
           newX = Math.max(0, Math.min(newX, canvasRect.width));
           newY = Math.max(0, Math.min(newY, canvasRect.height));
-
           const fromNode = nodes.find(n => n.id === draggedControl.from);
           const toNode = nodes.find(n => n.id === draggedControl.to);
           if (fromNode && toNode) {
@@ -252,15 +231,13 @@ let dragThreshold = 10;   // Neu: Erhöhte Schwelle (von 5 auf 10px), ignoriert 
             const y1 = fromRect.top + fromRect.height / 2 - canvasRect.top;
             const x2 = toRect.left + toRect.width / 2 - canvasRect.left;
             const y2 = toRect.top + toRect.height / 2 - canvasRect.top;
-            
+           
             let startPoint = getBorderPoint(x1, y1, x2, y2, fromRect, canvasRect) || {x: x1, y: y1};
             let endPoint = getBorderPoint(x2, y2, x1, y1, toRect, canvasRect) || {x: x2, y: y2};
-
             const t = 0.5;
             draggedControl.controlX = (newX - (1 - t) ** 2 * startPoint.x - t ** 2 * endPoint.x) / (2 * (1 - t) * t);
             draggedControl.controlY = (newY - (1 - t) ** 2 * startPoint.y - t ** 2 * endPoint.y) / (2 * (1 - t) * t);
           }
-
           dragStartPos.x = touch.clientX;
           dragStartPos.y = touch.clientY;
           renderConnections();
@@ -268,7 +245,6 @@ let dragThreshold = 10;   // Neu: Erhöhte Schwelle (von 5 auf 10px), ignoriert 
       }
     };
   }
-
   function createTouchEndHandler() {
   return function touchEndHandler(e) {
     if (draggedNode) {
@@ -285,11 +261,9 @@ let dragThreshold = 10;   // Neu: Erhöhte Schwelle (von 5 auf 10px), ignoriert 
       draggedControl.isDragging = false;
       draggedControl = null;
     }
-
     potentialDraggedControl = null;
   };
 }
-
 // FIX: Zentraler Touch-Handler, der bei Berührung AUSSERHALB der Elemente den Zustand zurücksetzt.
 // Korrektur: Berücksichtigt jetzt auch die Steuerelemente und den Verbindungs-Button.
 document.addEventListener('touchstart', (e) => {
@@ -299,7 +273,6 @@ document.addEventListener('touchstart', (e) => {
   const isLabelElement = target.closest('.connection-label');
   // FIX: Prüfen, ob das Ziel eines der Steuerelemente ODER der Verbindungs-Button ist
   const isControlElement = target.closest('.conceptmap #addNode, .conceptmap #deleteMode, .conceptmap #clearAll, .conceptmap .color-button, .node-connect-btn');
-
   // Nur zurücksetzen, wenn die Berührung außerhalb ALLER interaktiven Elemente liegt
   if (!isCanvasElement && !isNodeElement && !isLabelElement && !isControlElement) {
     // Vollständiger Reset aller Interaktionszustände
@@ -310,7 +283,6 @@ document.addEventListener('touchstart', (e) => {
     draggedControl = null;
     potentialDraggedControl = null;
     hasMoved = false;
-
     if (selectedNode) {
       selectedNode.element.classList.remove('selected');
       selectedNode.connectBtn.style.display = 'none';
@@ -322,7 +294,6 @@ document.addEventListener('touchstart', (e) => {
     }
   }
 }, { passive: true });
-
   // Node erstellen
   function createNode(x, y, text = 'Neues Element', id = null, backgroundColor = 'white') {
     const node = document.createElement('div');
@@ -334,7 +305,7 @@ document.addEventListener('touchstart', (e) => {
     node.style.maxWidth = '200px';
     node.style.wordWrap = 'break-word';
     node.style.overflowWrap = 'break-word';
-    
+   
     const nodeText = document.createElement('div');
     nodeText.className = 'node-text';
     nodeText.textContent = text;
@@ -345,14 +316,12 @@ document.addEventListener('touchstart', (e) => {
     nodeText.style.lineHeight = '1.2';
     nodeText.style.padding = '8px';
     node.appendChild(nodeText);
-
     const connectBtn = document.createElement('button');
     connectBtn.setAttribute('type', 'button');
     connectBtn.className = 'node-connect-btn';
     connectBtn.textContent = '+';
     connectBtn.title = 'Verbindung erstellen';
     canvas.appendChild(connectBtn);
-
     const nodeData = {
       id: id || nodeIdCounter++,
       element: node,
@@ -361,10 +330,9 @@ document.addEventListener('touchstart', (e) => {
       y: y,
       backgroundColor: backgroundColor
     };
-    
+   
     nodes.push(nodeData);
     canvas.appendChild(node);
-
     function updateConnectBtnPosition() {
       const rect = node.getBoundingClientRect();
       const canvasRect = canvas.getBoundingClientRect();
@@ -374,12 +342,10 @@ document.addEventListener('touchstart', (e) => {
     updateConnectBtnPosition();
     node.addEventListener('mousemove', updateConnectBtnPosition);
     window.addEventListener('resize', updateConnectBtnPosition);
-
     connectBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       handleConnect(nodeData);
     });
-
     node.addEventListener('mousedown', (e) => {
       e.stopPropagation();
       draggedNode = nodeData;
@@ -387,7 +353,6 @@ document.addEventListener('touchstart', (e) => {
       dragStartPos.x = e.clientX;
       dragStartPos.y = e.clientY;
     }, { passive: true });
-
     node.addEventListener('click', (e) => {
       e.stopPropagation();
       if (!hasMoved) {
@@ -397,14 +362,12 @@ document.addEventListener('touchstart', (e) => {
         }
       }
     });
-
     node.addEventListener('dblclick', (e) => {
       e.preventDefault();
       e.stopPropagation();
       console.log('Doppelklick auf Node (Mouse):', nodeData.id);
       selectAndEditNode(nodeData);
     });
-
     let nodeLastTap = 0;
     node.addEventListener('touchstart', (e) => {
       e.stopPropagation();
@@ -419,12 +382,10 @@ document.addEventListener('touchstart', (e) => {
         hasMoved = false;
         dragStartPos.x = touch.clientX;
         dragStartPos.y = touch.clientY;
-
         const touchMoveHandler = createTouchDragHandler(true);
         const touchEndHandler = createTouchEndHandler();
         document.addEventListener('touchmove', touchMoveHandler, { passive: false });
         document.addEventListener('touchend', touchEndHandler, { passive: true });
-
         const globalTouchEnd = () => {
           document.removeEventListener('touchmove', touchMoveHandler);
           document.removeEventListener('touchend', touchEndHandler);
@@ -434,10 +395,8 @@ document.addEventListener('touchstart', (e) => {
       }
       nodeLastTap = currentTime;
     }, { passive: false });
-
     return nodeData;
   }
-
   // Node auswählen
   function selectNode(nodeData) {
     if (selectedNode && selectedNode !== nodeData) {
@@ -450,24 +409,19 @@ document.addEventListener('touchstart', (e) => {
     selectedConnection = null;
     renderConnections();
   }
-
   // Node auswählen und editieren
   function selectAndEditNode(nodeData) {
     console.log('selectAndEditNode aufgerufen für Node:', nodeData.id);
     selectNode(nodeData);
-
     if (connectStart) {
       connectStart.element.classList.remove('connecting');
       connectStart = null;
       canvas.classList.remove('connecting');
     }
-
     const nodeText = nodeData.element.querySelector('.node-text');
     const rect = nodeText.getBoundingClientRect();
     const canvasRect = canvas.getBoundingClientRect();
-
     nodeText.style.visibility = 'hidden';
-
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'node-text-input';
@@ -486,23 +440,30 @@ document.addEventListener('touchstart', (e) => {
     input.style.margin = '0';
     input.style.zIndex = '20';
     canvas.appendChild(input);
-
     input.focus();
     input.select();
-
+    // Validation: Verbotene Zeichen filtern (< > ' ")
+    const forbiddenChars = /[<>\"'']/g;
+    let hasAlerted = false;
     input.addEventListener('input', (e) => {
+      const oldValue = e.target.value;
+      e.target.value = e.target.value.replace(forbiddenChars, '');
+      // MaxLength-Check
       if (input.value.length >= input.maxLength) {
         alert(`Maximale Länge von ${input.maxLength} Zeichen erreicht!`);
       }
+      // Alert wenn verbotene Zeichen entfernt wurden
+      if (oldValue !== e.target.value && !hasAlerted) {
+        alert('Verbotene Zeichen (< > \' ") wurden entfernt.');
+        hasAlerted = true;
+      }
     });
-
     const saveInput = () => {
       nodeText.textContent = input.value.trim();
       input.remove();
       nodeText.style.visibility = 'visible';
       saveToJSON();
     };
-
     input.addEventListener('blur', saveInput);
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
@@ -510,12 +471,10 @@ document.addEventListener('touchstart', (e) => {
         input.blur();
       }
     });
-
     nodeData.element.addEventListener('dblclick', (e) => {
       e.stopPropagation();
     }, { once: true });
   }
-
   // Verbindung starten oder erstellen
   function handleConnect(nodeData) {
     if (!connectStart) {
@@ -531,13 +490,10 @@ document.addEventListener('touchstart', (e) => {
         const y1 = fromRect.top + fromRect.height / 2 - canvasRect.top;
         const x2 = toRect.left + toRect.width / 2 - canvasRect.left;
         const y2 = toRect.top + toRect.height / 2 - canvasRect.top;
-
         const startPoint = getBorderPoint(x1, y1, x2, y2, fromRect, canvasRect) || {x: x1, y: y1};
         const endPoint = getBorderPoint(x2, y2, x1, y1, toRect, canvasRect) || {x: x2, y: y2};
-
         const controlX = (startPoint.x + endPoint.x) / 2;
         const controlY = (startPoint.y + endPoint.y) / 2;
-
         createConnection(connectStart, nodeData, '', controlX, controlY);
       }
       connectStart.element.classList.remove('connecting');
@@ -545,7 +501,6 @@ document.addEventListener('touchstart', (e) => {
       connectStart = null;
     }
   }
-
   function createConnection(from, to, label = '', controlX, controlY, id = null) {
     const conn = {
       id: id || connectionIdCounter++,
@@ -561,40 +516,33 @@ document.addEventListener('touchstart', (e) => {
     renderConnections();
     saveToJSON();
   }
-
   // Verbindungen zeichnen
   function renderConnections() {
     while (svg.children.length > 1) {
       svg.removeChild(svg.lastChild);
     }
-
     connections.forEach(conn => {
       const fromNode = nodes.find(n => n.id === conn.from);
       const toNode = nodes.find(n => n.id === conn.to);
-      
+     
       if (!fromNode || !toNode) return;
-
       const fromRect = fromNode.element.getBoundingClientRect();
       const toRect = toNode.element.getBoundingClientRect();
       const canvasRect = canvas.getBoundingClientRect();
-
       const x1 = fromRect.left + fromRect.width / 2 - canvasRect.left;
       const y1 = fromRect.top + fromRect.height / 2 - canvasRect.top;
       const x2 = toRect.left + toRect.width / 2 - canvasRect.left;
       const y2 = toRect.top + toRect.height / 2 - canvasRect.top;
-
       let startPoint = getBorderPoint(x1, y1, x2, y2, fromRect, canvasRect);
       if (!startPoint) startPoint = {x: x1, y: y1};
       let endPoint = getBorderPoint(x2, y2, x1, y1, toRect, canvasRect);
       if (!endPoint) endPoint = {x: x2, y: y2};
-
       const startX = startPoint.x;
       const startY = startPoint.y;
       const endX = endPoint.x;
       const endY = endPoint.y;
       const controlX = conn.controlX;
       const controlY = conn.controlY;
-
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       const d = `M ${startX} ${startY} Q ${controlX} ${controlY} ${endX} ${endY}`;
       path.setAttribute('d', d);
@@ -603,18 +551,16 @@ document.addEventListener('touchstart', (e) => {
         path.classList.add('selected');
       }
   path.addEventListener('click', (e) => {
-  e.preventDefault();  // FIX: Verhindert Safari's synthetische Events
+  e.preventDefault(); // FIX: Verhindert Safari's synthetische Events
   e.stopPropagation();
-  if (!isSelecting && !hasMoved) {  // FIX: Zusätzlicher Check
+  if (!isSelecting && !hasMoved) { // FIX: Zusätzlicher Check
     selectConnection(conn);
   }
 });
       svg.appendChild(path);
-
       const t = 0.5;
       const labelX = (1 - t) ** 2 * startX + 2 * (1 - t) * t * controlX + t ** 2 * endX;
       const labelY = (1 - t) ** 2 * startY + 2 * (1 - t) * t * controlY + t ** 2 * endY;
-
       if (!conn.labelElement) {
         const labelDiv = document.createElement('div');
         labelDiv.className = 'connection-label';
@@ -639,19 +585,16 @@ document.addEventListener('touchstart', (e) => {
       }
     });
   }
-
 function selectConnection(conn) {
   isSelecting = true;
   clearTimeout(selectTimeout);
   selectTimeout = setTimeout(() => {
     isSelecting = false;
   }, 300);
-
   // FIX: Sofort Drags resetten, um Leaks zu verhindern
   potentialDraggedControl = null;
   draggedControl = null;
   hasMoved = false;
-
   selectedConnection = conn;
   if (selectedNode) {
     selectedNode.element.classList.remove('selected');
@@ -660,7 +603,6 @@ function selectConnection(conn) {
   }
   renderConnections();
 }
-
   function deleteNode(nodeData) {
     const connectionsToDelete = connections.filter(c => c.from === nodeData.id || c.to === nodeData.id);
     connectionsToDelete.forEach(c => {
@@ -675,7 +617,6 @@ function selectConnection(conn) {
     renderConnections();
     saveToJSON();
   }
-
   function deleteConnection(conn) {
     if (conn.labelElement) {
       conn.labelElement.remove();
@@ -684,22 +625,19 @@ function selectConnection(conn) {
     renderConnections();
     saveToJSON();
   }
-
   document.addEventListener('mousemove', (e) => {
     if (draggedNode) {
       const deltaX = Math.abs(e.clientX - dragStartPos.x);
       const deltaY = Math.abs(e.clientY - dragStartPos.y);
-      
+     
       if (deltaX > 5 || deltaY > 5) {
         hasMoved = true;
         const canvasRect = canvas.getBoundingClientRect();
         const nodeRect = draggedNode.element.getBoundingClientRect();
         let newX = e.clientX - canvasRect.left - (nodeRect.width / 2);
         let newY = e.clientY - canvasRect.top - (nodeRect.height / 2);
-
         newX = Math.max(0, Math.min(newX, canvasRect.width - nodeRect.width));
         newY = Math.max(0, Math.min(newY, canvasRect.height - nodeRect.height));
-
         draggedNode.x = newX;
         draggedNode.y = newY;
         draggedNode.element.style.left = newX + 'px';
@@ -712,16 +650,14 @@ function selectConnection(conn) {
     } else if (draggedControl) {
       const deltaX = Math.abs(e.clientX - dragStartPos.x);
       const deltaY = Math.abs(e.clientY - dragStartPos.y);
-      
+     
       if (deltaX > 5 || deltaY > 5) {
         draggedControl.isDragging = true;
         const canvasRect = canvas.getBoundingClientRect();
         let newX = e.clientX - canvasRect.left;
         let newY = e.clientY - canvasRect.top;
-
         newX = Math.max(0, Math.min(newX, canvasRect.width));
         newY = Math.max(0, Math.min(newY, canvasRect.height));
-
         const fromNode = nodes.find(n => n.id === draggedControl.from);
         const toNode = nodes.find(n => n.id === draggedControl.to);
         if (fromNode && toNode) {
@@ -731,15 +667,13 @@ function selectConnection(conn) {
           const y1 = fromRect.top + fromRect.height / 2 - canvasRect.top;
           const x2 = toRect.left + toRect.width / 2 - canvasRect.left;
           const y2 = toRect.top + toRect.height / 2 - canvasRect.top;
-          
+         
           let startPoint = getBorderPoint(x1, y1, x2, y2, fromRect, canvasRect) || {x: x1, y: y1};
           let endPoint = getBorderPoint(x2, y2, x1, y1, toRect, canvasRect) || {x: x2, y: y2};
-
           const t = 0.5;
           draggedControl.controlX = (newX - (1 - t) ** 2 * startPoint.x - t ** 2 * endPoint.x) / (2 * (1 - t) * t);
           draggedControl.controlY = (newY - (1 - t) ** 2 * startPoint.y - t ** 2 * endPoint.y) / (2 * (1 - t) * t);
         }
-
         dragStartPos.x = e.clientX;
         dragStartPos.y = e.clientY;
         renderConnections();
@@ -748,7 +682,7 @@ function selectConnection(conn) {
     } else if (potentialDraggedControl) {
       const deltaX = Math.abs(e.clientX - dragStartPos.x);
       const deltaY = Math.abs(e.clientY - dragStartPos.y);
-      
+     
       if (deltaX > 5 || deltaY > 5) {
         hasMoved = true;
         draggedControl = potentialDraggedControl;
@@ -757,10 +691,8 @@ function selectConnection(conn) {
         const canvasRect = canvas.getBoundingClientRect();
         let newX = e.clientX - canvasRect.left;
         let newY = e.clientY - canvasRect.top;
-
         newX = Math.max(0, Math.min(newX, canvasRect.width));
         newY = Math.max(0, Math.min(newY, canvasRect.height));
-
         const fromNode = nodes.find(n => n.id === draggedControl.from);
         const toNode = nodes.find(n => n.id === draggedControl.to);
         if (fromNode && toNode) {
@@ -770,22 +702,19 @@ function selectConnection(conn) {
           const y1 = fromRect.top + fromRect.height / 2 - canvasRect.top;
           const x2 = toRect.left + toRect.width / 2 - canvasRect.left;
           const y2 = toRect.top + toRect.height / 2 - canvasRect.top;
-          
+         
           let startPoint = getBorderPoint(x1, y1, x2, y2, fromRect, canvasRect) || {x: x1, y: y1};
           let endPoint = getBorderPoint(x2, y2, x1, y1, toRect, canvasRect) || {x: x2, y: y2};
-
           const t = 0.5;
           draggedControl.controlX = (newX - (1 - t) ** 2 * startPoint.x - t ** 2 * endPoint.x) / (2 * (1 - t) * t);
           draggedControl.controlY = (newY - (1 - t) ** 2 * startPoint.y - t ** 2 * endPoint.y) / (2 * (1 - t) * t);
         }
-
         dragStartPos.x = e.clientX;
         dragStartPos.y = e.clientY;
         renderConnections();
       }
     }
   });
-
   document.addEventListener('mouseup', () => {
     if (draggedNode) {
       if (hasMoved) {
@@ -803,7 +732,6 @@ function selectConnection(conn) {
     }
     potentialDraggedControl = null;
   });
-
   // Canvas-Events: Double-Click für neuen Node (Mouse) und Double-Tap (Touch)
   canvas.addEventListener('dblclick', (e) => {
     if (e.target === canvas || e.target === svg) {
@@ -812,7 +740,6 @@ function selectConnection(conn) {
       saveToJSON();
     }
   });
-
   // Touch für Canvas: Double-Tap zum Hinzufügen
   let canvasLastTap = 0;
   canvas.addEventListener('touchstart', (e) => {
@@ -822,7 +749,6 @@ function selectConnection(conn) {
       hasMoved = false;
       dragStartPos.x = e.touches[0].clientX;
       dragStartPos.y = e.touches[0].clientY;
-
       if (tapLength < 500 && tapLength > 0) {
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
@@ -833,24 +759,20 @@ function selectConnection(conn) {
           const touch = e.touches[0];
           const deltaX = Math.abs(touch.clientX - dragStartPos.x);
           const deltaY = Math.abs(touch.clientY - dragStartPos.y);
-
           if (deltaX > 5 || deltaY > 5) {
             hasMoved = true;
           }
         };
-
         const touchEndHandler = (e) => {
           document.removeEventListener('touchmove', touchMoveHandler);
           document.removeEventListener('touchend', touchEndHandler);
         };
-
         document.addEventListener('touchmove', touchMoveHandler, { passive: true });
         document.addEventListener('touchend', touchEndHandler, { passive: true });
       }
       canvasLastTap = currentTime;
     }
   }, { passive: true });
-
   canvas.addEventListener('touchend', (e) => {
     if (e.target === canvas || e.target === svg) {
       if (!hasMoved) {
@@ -870,7 +792,6 @@ function selectConnection(conn) {
       hasMoved = false;
     }
   }, { passive: true });
-
   document.querySelector('.conceptmap #addNode').addEventListener('click', () => {
     const canvasRect = canvas.getBoundingClientRect();
     const centerX = (canvasRect.width / 10) - 50;
@@ -909,7 +830,6 @@ document.querySelector('.conceptmap #deleteMode').addEventListener('click', () =
       saveToJSON();
     }
   });
-
   document.querySelectorAll('.conceptmap .color-button').forEach(button => {
     button.addEventListener('click', () => {
       if (selectedNode) {
@@ -922,7 +842,6 @@ document.querySelector('.conceptmap #deleteMode').addEventListener('click', () =
       }
     });
   });
-
   function saveToJSON() {
     const data = {
       nodes: nodes.map(n => ({
@@ -943,11 +862,10 @@ document.querySelector('.conceptmap #deleteMode').addEventListener('click', () =
     };
     jsonInput.value = JSON.stringify(data);
   }
-
   function loadFromJSON(jsonStr) {
     try {
       const data = JSON.parse(jsonStr);
-      
+     
       nodes.forEach(n => {
         n.element.remove();
         n.connectBtn.remove();
@@ -957,14 +875,14 @@ document.querySelector('.conceptmap #deleteMode').addEventListener('click', () =
       });
       nodes = [];
       connections = [];
-      
+     
       if (data.nodes) {
         data.nodes.forEach(n => {
           createNode(n.x, n.y, n.text, n.id, n.backgroundColor);
           if (n.id >= nodeIdCounter) nodeIdCounter = n.id + 1;
         });
       }
-      
+     
       if (data.connections) {
         data.connections.forEach(c => {
           const from = nodes.find(n => n.id === c.from);
@@ -975,19 +893,17 @@ document.querySelector('.conceptmap #deleteMode').addEventListener('click', () =
           }
         });
       }
-      
+     
       renderConnections();
     } catch (e) {
       alert('Fehler beim Laden: Ungültiges JSON-Format');
     }
   }
-
    canvas.addEventListener('click', (e) => {
     if (e.target === canvas || e.target === svg) {
       // FIX: isSelecting-Timeout hier auch zurücksetzen
       isSelecting = false;
       clearTimeout(selectTimeout);
-
       if (selectedNode) {
         selectedNode.element.classList.remove('selected');
         selectedNode.connectBtn.style.display = 'none';
@@ -1002,14 +918,12 @@ document.querySelector('.conceptmap #deleteMode').addEventListener('click', () =
       renderConnections();
     }
   });
-
   function attachLabelEvents(element, conn) {
     let labelLastTap = 0;
-
     const editLabel = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      
+     
       const input = document.createElement('input');
       input.type = 'text';
       input.className = 'connection-label-input';
@@ -1020,16 +934,24 @@ document.querySelector('.conceptmap #deleteMode').addEventListener('click', () =
       canvas.appendChild(input);
       conn.labelElement = input;
       element.remove();
-
       input.focus();
       input.select();
-
+      // Validation: Verbotene Zeichen filtern (< > ' ")
+      const forbiddenChars = /[<>\"'']/g;
+      let hasAlerted = false;
       input.addEventListener('input', (e) => {
+        const oldValue = e.target.value;
+        e.target.value = e.target.value.replace(forbiddenChars, '');
+        // MaxLength-Check
         if (input.value.length >= input.maxLength) {
           alert(`Maximale Länge von ${input.maxLength} Zeichen erreicht!`);
         }
+        // Alert wenn verbotene Zeichen entfernt wurden
+        if (oldValue !== e.target.value && !hasAlerted) {
+          alert('Verbotene Zeichen (< > \' ") wurden entfernt.');
+          hasAlerted = true;
+        }
       });
-
       const saveInput = () => {
         conn.label = input.value.trim();
         const newLabelDiv = document.createElement('div');
@@ -1044,7 +966,6 @@ document.querySelector('.conceptmap #deleteMode').addEventListener('click', () =
         saveToJSON();
         attachLabelEvents(newLabelDiv, conn);
       };
-
       input.addEventListener('blur', saveInput);
       input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
@@ -1053,7 +974,6 @@ document.querySelector('.conceptmap #deleteMode').addEventListener('click', () =
         }
       });
     };
-
     // Mouse-Events für Label (Desktop)
     element.addEventListener('mousedown', (e) => {
       e.stopPropagation();
@@ -1068,7 +988,6 @@ document.querySelector('.conceptmap #deleteMode').addEventListener('click', () =
       dragStartPos.x = e.clientX;
       dragStartPos.y = e.clientY;
     });
-
     element.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -1076,17 +995,15 @@ document.querySelector('.conceptmap #deleteMode').addEventListener('click', () =
         selectConnection(conn);
       }
     });
-
     element.addEventListener('dblclick', (e) => {
       e.preventDefault();
       e.stopPropagation();
       editLabel(e);
     });
-
     // Touch-Events für Label (iOS/Mobile)
     element.addEventListener('touchstart', (e) => {
       // FIX: Wichtig, um Safari's Touch-to-Mouse-Konvertierung zu verhindern
-      e.preventDefault(); 
+      e.preventDefault();
       if (draggedControl) {
         draggedControl = null;
       }
@@ -1106,7 +1023,6 @@ document.querySelector('.conceptmap #deleteMode').addEventListener('click', () =
         hasMoved = false;
         dragStartPos.x = touch.clientX;
         dragStartPos.y = touch.clientY;
-
         const touchMoveHandler = createTouchDragHandler(false);
         const touchEndHandler = (e) => {
           if (!hasMoved) {
@@ -1115,10 +1031,8 @@ document.querySelector('.conceptmap #deleteMode').addEventListener('click', () =
           document.removeEventListener('touchmove', touchMoveHandler);
           document.removeEventListener('touchend', touchEndHandler);
         };
-
         document.addEventListener('touchmove', touchMoveHandler, { passive: false });
         document.addEventListener('touchend', touchEndHandler, { passive: true });
-
         const globalTouchEnd = () => {
           document.removeEventListener('touchmove', touchMoveHandler);
           document.removeEventListener('touchend', touchEndHandler);
@@ -1128,5 +1042,5 @@ document.querySelector('.conceptmap #deleteMode').addEventListener('click', () =
       }
       labelLastTap = currentTime;
     }, { passive: false });
-  } 
+  }
 </script>
